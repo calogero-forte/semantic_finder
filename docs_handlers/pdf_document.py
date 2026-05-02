@@ -1,11 +1,13 @@
+from document import Document
 import pymupdf 
 import os 
 import re
 import logging
+import utils as utl
 
 logger = logging.getLogger(__name__)
 
-class PDFHandler:
+class PDFDocument(Document):
     """
     This class mantains an internal representation 
     of a PDF file and, provides methods to search 
@@ -25,8 +27,12 @@ class PDFHandler:
         A PDFHandler
         """
 
-        self.pdf_path = pdf_path_i
-        self.pdf_filename = self.__extract_pdf_filename(pdf_path_i)
+        # Initializing parent class and 
+        # relative properties
+        super().__init__( path_i = pdf_path_i )
+
+        # self.pdf_path = pdf_path_i
+        # self.pdf_filename = self.__extract_pdf_filename(pdf_path_i)
     
         self.pdf = pymupdf.open(pdf_path_i)
 
@@ -34,36 +40,51 @@ class PDFHandler:
             raise Exception("The given file is not a PDF")
         else:
             #Number of pages
-            self. page_num = len (self.pdf)
+            # self. page_num = len (self.pdf)
             # Table of contents in format [level, title, page]
             self.toc = self.pdf.get_toc(simple = True)
-
-        #Store the TOC index of the last found section
-        self.last_toc_index = -1
-        #Contain the last extracted text
-        self.last_extracted_text = ""
+            #Store the TOC index of the last found section
+            self.last_toc_index = -1
+            #Contain the last extracted text
+            self.last_extracted_text = ""
 
     ##########################################################
     # Public methods
     ##########################################################
 
-    def print_toc(self):
-        """
-        Print the table of content of this PDF
-        """
-        for i, item in enumerate(self.toc):
-            print(f"({i})): ", item)
+    # Redefining parent methods
 
-    ##################################################
-
-    def get_pdf_filename(self):
+    @property
+    def page_num(self):
         """
 
         Return
         -------------------
-        (str) the name of this PDF
+        The number of pages of this PDF file
         """
-        return self.pdf_filename
+        self.__page_num = len( self.pdf )
+        return self.__page_num
+
+    ##################################################
+
+    @page_num.setter
+    def page_num(self, value):
+        raise Exception("The page number cannot be modified")
+
+    ##################################################
+
+    # Other public methods
+
+    def print_toc(self):
+        """
+        Print the table of content of this PDF
+
+        Return
+        -------------------
+        None
+        """
+        for i, item in enumerate(self.toc):
+            print(f"({i})): ", item)
 
     ##################################################
 
@@ -83,7 +104,7 @@ class PDFHandler:
         toc_index_o: (int) the indexes of the section in the TOC.
                      -1 if no match has been found
         """
-        logger.info(f"Searching for section with heading '{heading_i}' (first_occurrance={first_occurrance_i})")
+        logger.info(f"Searching for section with heading '{heading_i}'")
         toc_index_o = -1
         indexes = self.__get_toc_entries_by_title(heading_i)
 
@@ -102,7 +123,7 @@ class PDFHandler:
                 sub_toc_sorted = self.__sort_toc_entries_by_heading(sub_toc, heading_i)
                 toc_index_o = sub_toc_sorted[0][0]
 
-                logger.info(f"Selected section with lowest heading level: '{self.toc[toc_index_o][1]}'")
+            logger.info(f"Section found: '{self.toc[toc_index_o][1]}'")
 
         self.last_toc_index = toc_index_o
         return toc_index_o
@@ -112,7 +133,7 @@ class PDFHandler:
     def get_section_pages(self, section_toc_index_i):
         """
         Return all the pages that belong to the given section 
-        i.e. which heading level is ‹ to the one of the given section.
+        i.e. which heading level is < to the one of the given section.
 
         section_toc_index_i: (int) The index of the
                              section TOC entry
@@ -135,7 +156,6 @@ class PDFHandler:
         }
         logger.info(f"Retrieving pages for section index {section_toc_index_i} ('{start_toc_entry[1]}')")
 
-        # Normalizing searched title
         start_index = section_toc_index_i
         start_level = int( start_toc_entry[0] )
         end_index = -1 # At the beginning, it is used as "not found" flag
@@ -179,14 +199,14 @@ class PDFHandler:
 
         # Section extremes
         start_page = section_frame_i['start']['page']
-        start_index = section_frame_i['start' ]['index']
+        start_index = section_frame_i['start']['index']
         end_page = section_frame_i['end']['page']
         end_index = section_frame_i['end']['index']
 
         # Strings to compare
         sec_title_plain = str( self.toc[start_index][1] )
-        sec_title_norm = self._normalize( sec_title_plain )
-        next_sec_title_norm = self._normalize( str(self.toc[end_index][1] ) )
+        sec_title_norm = utl.normalize_string( sec_title_plain )
+        next_sec_title_norm = utl.normalize_string( str(self.toc[end_index][1] ) )
 
         # Indexes to navigate the TOC
         curr_index = start_index # Starting from the first item
@@ -209,16 +229,16 @@ class PDFHandler:
             # Case: this is the fist page, the text before the heading (included)
             # shall be removed
             if(curr_page == start_page):
-                curr_lines = self._remove_text_lines(curr_lines, sec_title_norm)
+                curr_lines = utl.remove_text_lines(curr_lines, sec_title_norm)
 
             # Case: last page. Remove all the text after the next heading (included)
             if (curr_page == end_page):
-                curr_lines = self._remove_text_lines(curr_lines, next_sec_title_norm, True)
+                curr_lines = utl.remove_text_lines(curr_lines, next_sec_title_norm, True)
 
             # Remove shorter lines (it is supposed they are page numbers
             # and other stuffs like that)
             if(fine_trimming_i):
-                curr_lines = self._remove_short_lines(curr_lines)
+                curr_lines = utl.remove_short_lines(curr_lines)
 
             # Add these lines to the result
             pages_text_list.append( "".join( curr_lines ) )
@@ -278,7 +298,7 @@ class PDFHandler:
                     #self.logger-print message(f"No text found for section {heading title_i) in file {self.pdf_filename}™, Logger.LEVEL_ERROR)
                 else:
                     self.last_extracted_text = pages_text_o
-                    message = f"{heading_title_i} found in file {self.pdf_filename} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
+                    message = f"{heading_title_i} found in file {self.get_file_name()} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
                     # self.logger.print message(message, Logger, LEVEL_ INFO)
                     print(message)
 
@@ -314,25 +334,36 @@ class PDFHandler:
         logger.info(f"Last extracted text successfully saved to {output_file_path_i}")
         return output_file_path_i
 
+    ##################################################
+
+    @staticmethod
+    def get_all_pdf_documents(dir_path_i):
+        """
+        Search for all PDF documents in a given directory,
+        instantiate a PDFDocument for each, and return them.
+
+        dir_path_i: (str) The path of the directory
+
+        Return
+        -------------------
+        (list) a list of PDFDocument instances
+        """
+        pdf_docs = []
+        all_docs = Document.get_all_documents(dir_path_i)
+        
+        for doc_path in all_docs:
+            if doc_path.lower().endswith('.pdf'):
+                try:
+                    pdf_doc = PDFDocument(doc_path)
+                    pdf_docs.append(pdf_doc)
+                except Exception as e:
+                    logger.error(f"Failed to load {doc_path}: {e}")
+                    
+        return pdf_docs
+
     ##########################################################
     # Private methods
     ##########################################################
-
-    def _normalize(self, string_i):
-        """
-        Remove white spaces, dots and numbers and, 
-        put all in lower case.
-        """
-        clean_string = re.sub( r'^\d+(?:\.\d+)*', '', string_i )
-        clean_string = re.sub( r'[.\s]', '', clean_string )
-        return clean_string.lower()
-
-    ##################################################
-
-    def __extract_pdf_filename(self, pdf_path_i):
-        return os.path.basename(pdf_path_i)
-
-    ##################################################
 
     def __get_toc_entry(self, toc_index_i):
         if( toc_index_i < 0 or toc_index_i >= len(self.toc)):
@@ -348,40 +379,12 @@ class PDFHandler:
 
     ##################################################
 
-    def _remove_text_lines(self, text_lines_i, line_break_i, forward_i = False):
-
-        line_break_norm = self._normalize(line_break_i)
-        i = 0
-        while( line_break_norm not in self._normalize( text_lines_i[i] ) ):
-            i += 1
-            if( i == len( text_lines_i) ):
-                break
-
-        if(i < 0 or i >= len (text_lines_i) ):
-            raise Exception(f"Line index {i} is out of range")
-
-        if( not forward_i ):
-            return text_lines_i[ i + 1 : ]
-        else:   
-            return text_lines_i[ : i ]
-
-    ##################################################
-
-    def _remove_short_lines(self, text_lines_i, min_words_for_line_i = 3):
-        text_lines_o = []
-        for s in text_lines_i:
-            if( len( s.split() ) >= min_words_for_line_i ):
-                text_lines_o.append(s)
-        return text_lines_o
-
-    ##################################################
-
     def __get_toc_entries_by_title(self, heading_i):
 
         correspondences = []
-        heading_norm = self._normalize(heading_i)
+        heading_norm = utl.normalize_string(heading_i)
         for idx, item in enumerate(self.toc):
-            if( heading_norm in self._normalize(str( item[1] ) ) ):
+            if( heading_norm in utl.normalize_string(str( item[1] ) ) ):
                 correspondences.append(idx)
         
         return correspondences
@@ -390,11 +393,11 @@ class PDFHandler:
 
     def __sort_toc_entries_by_heading(self, toc_entries_i, searched_heading_i):
 
-        searched_heading_norm = self._normalize(searched_heading_i)
+        searched_heading_norm = utl.normalize_string(searched_heading_i)
 
         def sort_func(toc_item):
             heading_level = toc_item[1][0]
-            title_norm = self._normalize(str(toc_item[1][1]))
+            title_norm = utl.normalize_string(str(toc_item[1][1]))
             heading_pos = title_norm.find(searched_heading_norm)
 
             # Keep non-matching titles at the end if they ever reach this sorter.
@@ -409,9 +412,9 @@ class PDFHandler:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format="[%(name)s :  %(levelname)s] %(message)s")
-    pdf_handler = PDFHandler('/Users/calogeroforte/UPF_Handout.pdf')
-    pdf_handler.get_section_text_by_heading("Introduction")
-    pdf_handler.save_last_extracted_text('/Users/calogeroforte/introduction.txt')
+    pdf = PDFDocument('/Users/calogeroforte/UPF_Handout.pdf')
+    pdf.get_section_text_by_heading("Introduction")
+    pdf.save_last_extracted_text('/Users/calogeroforte/introduction.txt')
     
 
 

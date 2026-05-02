@@ -23,9 +23,9 @@ class Document(ABC):
         path = kwargs.get('path_i', None)
 
         if( path != None):
-            self.path = path
-            self.name = Document.extract_filename(pdf_path)
-            self._page_num = 0
+            self.__path = path
+            self.__file_name = Document.extract_filename(path)
+            self.__page_num = 0
 
     ##########################################################
     # Public methods
@@ -57,6 +57,17 @@ class Document(ABC):
 
     ##################################################
 
+    def get_file_name(self):
+        """
+
+        Return
+        -------------------
+        (str) the name of this file
+        """
+        return self.__file_name
+
+    ##################################################
+
     @staticmethod
     def extract_filename(path_i):
         """
@@ -70,3 +81,26 @@ class Document(ABC):
         (str) the name of this PDF
         """
         return os.path.basename(path_i)
+
+    ##################################################
+
+    @staticmethod
+    def get_all_documents(dir_path_i):
+        """
+        Search for all documents in a given directory.
+
+        dir_path_i: (str) The path of the directory
+
+        Return
+        -------------------
+        (list) a list of file paths found in the directory
+        """
+        if not os.path.isdir(dir_path_i):
+            return []
+            
+        docs = []
+        for file in os.listdir(dir_path_i):
+            full_path = os.path.join(dir_path_i, file)
+            if os.path.isfile(full_path):
+                docs.append(full_path)
+        return docs
