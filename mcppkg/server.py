@@ -15,7 +15,7 @@ from .routes import health
 logger = logging.getLogger(__name__)
 
 class McpServer:
-    def __init__(self, enable_auth_i=True):        
+    def __init__(self, name_i="mcp_server", enable_auth_i=True):        
 
         # Authenticator instantiation
         if( enable_auth_i ):
@@ -27,7 +27,7 @@ class McpServer:
 
         # MCP creation
         self.mcp = FastMCP(
-            name="fincance_mcp",
+            name=name_i,
             auth=provider,
         )
 

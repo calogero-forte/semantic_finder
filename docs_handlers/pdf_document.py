@@ -1,9 +1,9 @@
-from document import Document
+from .document import Document
+from .utils import *
 import pymupdf 
 import os 
 import re
 import logging
-import utils as utl
 
 logger = logging.getLogger(__name__)
 
@@ -205,8 +205,8 @@ class PDFDocument(Document):
 
         # Strings to compare
         sec_title_plain = str( self.toc[start_index][1] )
-        sec_title_norm = utl.normalize_string( sec_title_plain )
-        next_sec_title_norm = utl.normalize_string( str(self.toc[end_index][1] ) )
+        sec_title_norm = normalize_string( sec_title_plain )
+        next_sec_title_norm = normalize_string( str(self.toc[end_index][1] ) )
 
         # Indexes to navigate the TOC
         curr_index = start_index # Starting from the first item
@@ -229,16 +229,16 @@ class PDFDocument(Document):
             # Case: this is the fist page, the text before the heading (included)
             # shall be removed
             if(curr_page == start_page):
-                curr_lines = utl.remove_text_lines(curr_lines, sec_title_norm)
+                curr_lines = remove_text_lines(curr_lines, sec_title_norm)
 
             # Case: last page. Remove all the text after the next heading (included)
             if (curr_page == end_page):
-                curr_lines = utl.remove_text_lines(curr_lines, next_sec_title_norm, True)
+                curr_lines = remove_text_lines(curr_lines, next_sec_title_norm, True)
 
             # Remove shorter lines (it is supposed they are page numbers
             # and other stuffs like that)
             if(fine_trimming_i):
-                curr_lines = utl.remove_short_lines(curr_lines)
+                curr_lines = remove_short_lines(curr_lines)
 
             # Add these lines to the result
             pages_text_list.append( "".join( curr_lines ) )
@@ -382,9 +382,9 @@ class PDFDocument(Document):
     def __get_toc_entries_by_title(self, heading_i):
 
         correspondences = []
-        heading_norm = utl.normalize_string(heading_i)
+        heading_norm = normalize_string(heading_i)
         for idx, item in enumerate(self.toc):
-            if( heading_norm in utl.normalize_string(str( item[1] ) ) ):
+            if( heading_norm in normalize_string(str( item[1] ) ) ):
                 correspondences.append(idx)
         
         return correspondences
@@ -393,11 +393,11 @@ class PDFDocument(Document):
 
     def __sort_toc_entries_by_heading(self, toc_entries_i, searched_heading_i):
 
-        searched_heading_norm = utl.normalize_string(searched_heading_i)
+        searched_heading_norm = normalize_string(searched_heading_i)
 
         def sort_func(toc_item):
             heading_level = toc_item[1][0]
-            title_norm = utl.normalize_string(str(toc_item[1][1]))
+            title_norm = normalize_string(str(toc_item[1][1]))
             heading_pos = title_norm.find(searched_heading_norm)
 
             # Keep non-matching titles at the end if they ever reach this sorter.
