@@ -6,11 +6,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from mcppkg.server import McpServer
-from mcppkg.tools import get_current_time
+from mcppkg.tools import get_current_time, get_pdf_text
 import uvicorn
 
-server = McpServer()
-server.get_mcp().add_tool(get_current_time)
+# Instantiate the MCP Server
+server = McpServer(enable_auth_i=False)
+# Register the tools
+server.register_tools( [get_current_time, get_pdf_text] )
         
 # Configure basic logging for the script execution 
 logging.basicConfig(level=logging.INFO)
