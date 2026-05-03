@@ -8,7 +8,6 @@ from fastmcp import FastMCP
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
 from .authentication import MCPAuthenticator, _RegistrationCompatMiddleware
 from .routes import health
 from docs_handlers.document_handler import DocumentHandler
@@ -17,11 +16,23 @@ from contextlib import asynccontextmanager
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
-async def mcp_lifespan(server: FastMCP):
-    """Lifespan manager for the MCP server."""
+async def mcp_lifespan(server: FastMCP) -> dict:
+    """
+    Lifespan manager for the MCP server.
+
+    Return
+    -------------------
+    (dict) A dictionary containing a DocumentHandler instance
+    """
     yield {"doc_handler": DocumentHandler()}
 
 class McpServer:
+    """
+    This class instantiates an MCP server and provides
+    methods to build the ASGI application and to 
+    register tools and resources.
+    """
+
     def __init__(self, name_i="mcp_server", enable_auth_i=True):        
 
         # Authenticator instantiation
@@ -52,8 +63,6 @@ class McpServer:
         -------------------
         (Any) The constructed ASGI application instance.
         """
-        self.mcp.custom_route("/health", methods=["GET"])(health)
-        
         app = self.mcp.http_app(path="/mcp", stateless_http=False)
         app.add_middleware(
             CORSMiddleware,
@@ -70,7 +79,7 @@ class McpServer:
     def get_mcp(self) -> FastMCP:
         return self.mcp
 
-    def register_tools(self, tool_i: Tool | [Tool]):
+    def register_tools(self, tool_i: Tool | list[Tool]):
 
         if( isinstance(tool_i, list) ):
             for tool in tool_i:
@@ -78,14 +87,26 @@ class McpServer:
         else:
             self.mcp.add_tool(tool_i)
 
-    def register_resources(self, resources_dict: dict):
-        """
-        Register multiple resources from a dictionary.
+    def register_resources(self, resource_i: Resource | list[Resource]):
 
-        resources_dict: (dict) Dictionary mapping URI (str) to the resource function (Callable)
-        """
-        for uri, resource_func in resources_dict.items():
-            self.mcp.resource(uri)(resource_func)
+        if( isinstance(resource_i, list) ):
+            for res in resource_i:
+                self.mcp.add_resource(res)
+        else:
+            self.mcp.add_resource(resource_i)
+
+    def register_routes(self, route_i: Callable, uri_i: str, http_method_i: str | list[str]):
+
+        self.mcp.custom_route(uri_i, methods=http_method_i)(route_i)
+
+    # def register_resources(self, resources_dict: dict):
+    #     """
+    #     Register multiple resources from a dictionary.
+
+    #     resources_dict: (dict) Dictionary mapping URI (str) to the resource function (Callable)
+    #     """
+    #     for uri, resource_func in resources_dict.items():
+    #         self.mcp.resource(uri)(resource_func)
 
 
     def __call__(self):

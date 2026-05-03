@@ -1,5 +1,10 @@
+import os
+import logging
 from typing import Generator
 from .document import Document
+from .pdf_document import PDFDocument
+
+logger = logging.getLogger(__name__)
 
 class DocumentHandler:
     """
@@ -109,6 +114,64 @@ class DocumentHandler:
             
             if match_name or match_ext:
                 yield doc
+
+    ##################################################
+
+    def sync_documents(self, directory_path_i):
+        """
+        Synchronizes this DocumentHandler with the files
+        currently inside directory_path_i
+
+        directory_path_i: (str) The path to sync
+
+        Return
+        -------------------
+        None
+        """
+        local_paths = os.path.expanduser(directory_path_i)
+        if( not os.path.exists(local_paths) or not os.path.isdir(local_paths) ):
+            logger.error( f"{local_paths} is not a directory" )
+            return
+
+        current_files = DocumentHandler.get_directory_documents(local_paths)
+        
+        # Here it would be good to have a timer 
+        self.clear_documents()
+        
+        for file_path in current_files:
+            ext = Document.get_file_extension( file_path )
+            try:
+                if ext == 'pdf':
+                    doc = PDFDocument(file_path)
+                    self.add_document(doc)
+                else:
+                    # Add future document handlers here (e.g., txt, docx) using polymorphism
+                    logger.debug(f"Document type '{ext}' is not currently supported: {file_path}")
+            except Exception as e:
+                logger.error(f"Failed to load document {file_path}: {e}")
+
+    ##################################################
+
+    @staticmethod
+    def get_directory_documents(dir_path_i):
+        """
+        Search for all documents in a given directory.
+
+        dir_path_i: (str) The path of the directory
+
+        Return
+        -------------------
+        (list) a list of file paths found in the directory
+        """
+        if not os.path.isdir(dir_path_i):
+            return []
+            
+        docs = []
+        for file in os.listdir(dir_path_i):
+            full_path = os.path.join(dir_path_i, file)
+            if os.path.isfile(full_path):
+                docs.append(full_path)
+        return docs
 
 ####################################################################################################
 

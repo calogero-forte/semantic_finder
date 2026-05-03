@@ -77,7 +77,7 @@ class Document(ABC):
         -------------------
         (str) the extension of this file
         """
-        return self.file_name.lower().split('.')[-1]
+        return Document.get_file_extension( self.file_name )
 
 
 
@@ -100,22 +100,16 @@ class Document(ABC):
     ##################################################
 
     @staticmethod
-    def get_all_documents(dir_path_i):
+    def get_file_extension(file_path_i) -> str:
         """
-        Search for all documents in a given directory.
+        Retrieve the extension from a file name/path
 
-        dir_path_i: (str) The path of the directory
+        file_path_i: (str) The path (absolute or relative) 
+                     of the file
 
         Return
         -------------------
-        (list) a list of file paths found in the directory
+        (str) the extension of this file without the dot
         """
-        if not os.path.isdir(dir_path_i):
-            return []
-            
-        docs = []
-        for file in os.listdir(dir_path_i):
-            full_path = os.path.join(dir_path_i, file)
-            if os.path.isfile(full_path):
-                docs.append(full_path)
-        return docs
+        return file_path_i.lower().split('.')[-1]
+    

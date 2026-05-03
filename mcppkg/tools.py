@@ -1,7 +1,13 @@
 from fastmcp.tools import tool
+from fastmcp.exceptions import ToolError
+from fastmcp import Context
+
 import datetime
 import os
+import logging
 from docs_handlers.pdf_document import PDFDocument
+
+logger = logging.getLogger(__name__)
 
 @tool(
     name="get_current_time",
@@ -16,39 +22,55 @@ async def get_current_time() -> str:
     return datetime.datetime.now().isoformat()
 
 @tool(
-    name="get_pdf_content",
-    description="Get a section text from a PDF",
+    name="get_pdfs_contents",
+    description="Retrieve the text that match the searched section in each pdf documents",
     annotations={"readOnlyHint": True}
 )
-async def get_pdf_text(section_title_i) -> str:
-    pdf = PDFDocument('/Users/calogeroforte/UPF_Handout.pdf')
-    text = pdf.get_section_text_by_heading(section_title_i)
-    return text
+async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx: Context) -> dict:
 
-@tool(
-    name="list_local_files",
-    description="List all files in the directory specified by LOCAL_PATHS in .env.",
-)
-async def list_local_files() -> list[str]:
-    """List all files in the directory specified by LOCAL_PATHS in .env.
+    logger.info(f"Retrieving text from PDF '{pdf_name_i}' for section '{section_title_i}'")
+
+    res = []
+    doc_handler = ctx.request_context.lifespan_context.get("doc_handler")
+
+    # Add a timer or some flag
+    doc_handler.sync_documents(os.getenv("LOCAL_PATHS"))
     
-    Returns:
-        A list of strings representing the names of the files in the directory.
-    """
-    local_path = os.getenv("LOCAL_PATHS", "~/")
-    local_path = os.path.expanduser(local_path)
+    for pdf in doc_handler.filter_documents(name_i = pdf_name_i, extension_i = "pdf"):
+        logger.info(f"Extracting section '{section_title_i}' from {pdf.file_name}")
+        res.append( pdf.get_section_text_by_heading(section_title_i) )
+
+    if(len(res) > 0):
+        logger.info(f"Successfully extracted section '{section_title_i}' from documents")
+        return "\n".join(res)
+    else:
+        logger.error(f"No results found for section '{section_title_i}' in document '{pdf_name_i}'")
+        raise ToolError("The research didn't yeld any result")
+
+# @tool(
+#     name="list_local_files",
+#     description="List all files in the directory specified by LOCAL_PATHS in .env.",
+# )
+# async def list_local_files() -> list[str]:
+#     """List all files in the directory specified by LOCAL_PATHS in .env.
     
-    if not os.path.isdir(local_path):
-        return [f"Error: {local_path} is not a valid directory."]
+#     Returns:
+#         A list of strings representing the names of the files in the directory.
+#     """
+#     local_path = os.getenv("LOCAL_PATHS", "~/")
+#     local_path = os.path.expanduser(local_path)
+    
+#     if not os.path.isdir(local_path):
+#         return [f"Error: {local_path} is not a valid directory."]
         
-    try:
-        files = []
-        for file in os.listdir(local_path):
-            if os.path.isfile(os.path.join(local_path, file)):
-                files.append(file)
-        return files
-    except Exception as e:
-        return [f"Error reading directory {local_path}: {str(e)}"]
+#     try:
+#         files = []
+#         for file in os.listdir(local_path):
+#             if os.path.isfile(os.path.join(local_path, file)):
+#                 files.append(file)
+#         return files
+#     except Exception as e:
+#         return [f"Error reading directory {local_path}: {str(e)}"]
 
 
 
