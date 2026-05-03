@@ -57,7 +57,8 @@ class Document(ABC):
 
     ##################################################
 
-    def get_file_name(self):
+    @property
+    def file_name(self) -> str:
         """
 
         Return
@@ -65,6 +66,20 @@ class Document(ABC):
         (str) the name of this file
         """
         return self.__file_name
+
+    ##################################################
+
+    @property
+    def file_extenstion(self) -> str:
+        """
+
+        Return
+        -------------------
+        (str) the extension of this file
+        """
+        return self.file_name.lower().split('.')[-1]
+
+
 
     ##################################################
 

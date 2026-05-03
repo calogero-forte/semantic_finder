@@ -1,5 +1,5 @@
-from .document import Document
-from .utils import *
+from document import Document
+from utils import *
 import pymupdf 
 import os 
 import re
@@ -298,7 +298,7 @@ class PDFDocument(Document):
                     #self.logger-print message(f"No text found for section {heading title_i) in file {self.pdf_filename}™, Logger.LEVEL_ERROR)
                 else:
                     self.last_extracted_text = pages_text_o
-                    message = f"{heading_title_i} found in file {self.get_file_name()} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
+                    message = f"{heading_title_i} found in file {self.file_name} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
                     # self.logger.print message(message, Logger, LEVEL_ INFO)
                     print(message)
 
