@@ -1,5 +1,5 @@
-from document import Document
-from utils import *
+from .document import Document
+from .utils import *
 import pymupdf 
 import os 
 import re

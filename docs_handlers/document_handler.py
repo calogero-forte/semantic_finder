@@ -1,5 +1,5 @@
 from typing import Generator
-from document import Document
+from .document import Document
 
 class DocumentHandler:
     """
@@ -38,14 +38,26 @@ class DocumentHandler:
 
     def add_document(self, document_i: Document):
         """
-        Set the list of documents.
+        Add a document to the list.
 
-        value: (list[Document] | None) The list of documents to set
+        document_i: (Document) The document to add
         """
         if isinstance(document_i, Document):
             self.__documents.append(document_i)
         else:
             raise ValueError("The document passed is not an instance of Document class")
+
+    ##################################################
+
+    def clear_documents(self):
+        """
+        Clear the list of managed documents.
+
+        Return
+        -------------------
+        None
+        """
+        self.__documents.clear()
 
     ##################################################
 

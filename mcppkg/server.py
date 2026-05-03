@@ -11,8 +11,15 @@ from starlette.responses import JSONResponse
 
 from .authentication import MCPAuthenticator, _RegistrationCompatMiddleware
 from .routes import health
+from docs_handlers.document_handler import DocumentHandler
+from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def mcp_lifespan(server: FastMCP):
+    """Lifespan manager for the MCP server."""
+    yield {"doc_handler": DocumentHandler()}
 
 class McpServer:
     def __init__(self, name_i="mcp_server", enable_auth_i=True):        
@@ -29,6 +36,7 @@ class McpServer:
         self.mcp = FastMCP(
             name=name_i,
             auth=provider,
+            lifespan=mcp_lifespan,
         )
 
         # Registration
@@ -69,6 +77,16 @@ class McpServer:
                 self.mcp.add_tool(tool)
         else:
             self.mcp.add_tool(tool_i)
+
+    def register_resources(self, resources_dict: dict):
+        """
+        Register multiple resources from a dictionary.
+
+        resources_dict: (dict) Dictionary mapping URI (str) to the resource function (Callable)
+        """
+        for uri, resource_func in resources_dict.items():
+            self.mcp.resource(uri)(resource_func)
+
 
     def __call__(self):
         pass
