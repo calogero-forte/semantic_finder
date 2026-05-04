@@ -7,7 +7,7 @@ from mcppkg.routes import health
 load_dotenv()
 
 from mcppkg.server import McpServer
-from mcppkg.tools import get_current_time, get_pdf_text
+from mcppkg.tools import get_current_time, get_pdf_text, get_pdf_toc
 from mcppkg.resources import get_all_documents, get_documents_by_name, get_documents_by_extension
 import uvicorn
 
@@ -16,7 +16,7 @@ server = McpServer( name_i=os.getenv("MCP_NAME", "mcp_server"), enable_auth_i=Fa
 # Register health route
 server.register_routes(health, "/health", "GET")
 # Register the tools
-server.register_tools( [get_current_time, get_pdf_text] )
+server.register_tools( [get_current_time, get_pdf_text, get_pdf_toc] )
 # Register the resources
 server.register_resources( [get_all_documents, get_documents_by_name, get_documents_by_extension] )
 

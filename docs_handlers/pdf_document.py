@@ -75,16 +75,14 @@ class PDFDocument(Document):
 
     # Other public methods
 
-    def print_toc(self):
+    def get_toc(self):
         """
-        Print the table of content of this PDF
 
         Return
         -------------------
-        None
+        (list) The table of content of this pdf
         """
-        for i, item in enumerate(self.toc):
-            print(f"({i})): ", item)
+        return self.toc
 
     ##################################################
 
@@ -333,6 +331,24 @@ class PDFDocument(Document):
 
         logger.info(f"Last extracted text successfully saved to {output_file_path_i}")
         return output_file_path_i
+
+    ##################################################
+
+    @staticmethod
+    def formtat_toc(toc_i):
+        """
+        Format the table of contents to be displayed in a user-friendly way.
+
+        toc_i: (list) The table of contents to format.
+
+        Return
+        -------------------
+        toc_o: (str) The formatted table of contents.
+        """
+        toc_o = ""
+        for toc_entry in toc_i:
+            toc_o += f"[ Level {toc_entry[0]}, Heading: {toc_entry[1]}, Page {toc_entry[2]} ]\n"
+        return toc_o
 
     ##################################################
 
