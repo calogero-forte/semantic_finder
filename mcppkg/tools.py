@@ -5,7 +5,8 @@ from fastmcp import Context
 import datetime
 import os
 import logging
-from docs_handlers.pdf_document import PDFDocument
+from docspkg.pdf_document import PDFDocument
+from docspkg.document import DocumentException
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +64,12 @@ async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx: Context) -> d
     doc_handler.sync_documents(os.getenv("LOCAL_PATHS"))
     
     for pdf in doc_handler.filter_documents(name_i = pdf_name_i, extension_i = "pdf"):
-        logger.info(f"Extracting section '{section_title_i}' from {pdf.file_name}")
-        res.append( pdf.get_section_text_by_heading(section_title_i)[1] )
+        try:
+            logger.info(f"Extracting section '{section_title_i}' from {pdf.file_name}")
+            res.append( pdf.get_section_text_by_heading(section_title_i)[1] )
+        except DocumentException as e:
+            logger.error(f"Error getting section text by heading: {e} in pdf {pdf.file_name}")
+            continue
 
     if(len(res) > 0):
         logger.info(f"Successfully extracted section '{section_title_i}' from documents")
@@ -72,31 +77,6 @@ async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx: Context) -> d
     else:
         logger.error(f"No results found for section '{section_title_i}' in document '{pdf_name_i}'")
         raise ToolError("The research didn't yeld any result")
-
-# @tool(
-#     name="list_local_files",
-#     description="List all files in the directory specified by LOCAL_PATHS in .env.",
-# )
-# async def list_local_files() -> list[str]:
-#     """List all files in the directory specified by LOCAL_PATHS in .env.
-    
-#     Returns:
-#         A list of strings representing the names of the files in the directory.
-#     """
-#     local_path = os.getenv("LOCAL_PATHS", "~/")
-#     local_path = os.path.expanduser(local_path)
-    
-#     if not os.path.isdir(local_path):
-#         return [f"Error: {local_path} is not a valid directory."]
-        
-#     try:
-#         files = []
-#         for file in os.listdir(local_path):
-#             if os.path.isfile(os.path.join(local_path, file)):
-#                 files.append(file)
-#         return files
-#     except Exception as e:
-#         return [f"Error reading directory {local_path}: {str(e)}"]
 
 
 

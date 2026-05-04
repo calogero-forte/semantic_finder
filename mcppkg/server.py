@@ -10,7 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from .authentication import MCPAuthenticator, _RegistrationCompatMiddleware
 from .routes import health
-from docs_handlers.document_handler import DocumentHandler
+from docspkg.document_handler import DocumentHandler
 from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)

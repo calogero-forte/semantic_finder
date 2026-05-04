@@ -2,9 +2,9 @@ import os
 import logging
 from fastmcp import Context
 from fastmcp.resources import resource
-from docs_handlers.document_handler import DocumentHandler
-from docs_handlers.document import Document # To check if it is needed
-# from docs_handlers.pdf_document import PDFDocument
+from docspkg.document_handler import DocumentHandler
+from docspkg.document import Document # To check if it is needed
+# from docspkg.pdf_document import PDFDocument
 
 logger = logging.getLogger(__name__)
 
