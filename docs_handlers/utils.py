@@ -32,7 +32,7 @@ def remove_text_lines(text_lines_i, line_break_i, forward_i = False):
             break
 
     if(i < 0 or i >= len (text_lines_i) ):
-        raise Exception(f"Line index {i} is out of range")
+        raise ValueError(f"Line index {i} is out of range")
 
     if( not forward_i ):
         return text_lines_i[ i + 1 : ]

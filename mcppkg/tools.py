@@ -64,7 +64,7 @@ async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx: Context) -> d
     
     for pdf in doc_handler.filter_documents(name_i = pdf_name_i, extension_i = "pdf"):
         logger.info(f"Extracting section '{section_title_i}' from {pdf.file_name}")
-        res.append( pdf.get_section_text_by_heading(section_title_i) )
+        res.append( pdf.get_section_text_by_heading(section_title_i)[1] )
 
     if(len(res) > 0):
         logger.info(f"Successfully extracted section '{section_title_i}' from documents")

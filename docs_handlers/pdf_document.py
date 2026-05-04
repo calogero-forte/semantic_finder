@@ -1,4 +1,4 @@
-from .document import Document
+from .document import Document, DocumentException
 from .utils import *
 import pymupdf 
 import os 
@@ -37,7 +37,7 @@ class PDFDocument(Document):
         self.pdf = pymupdf.open(pdf_path_i)
 
         if(not self.pdf.is_pdf):
-            raise Exception("The given file is not a PDF")
+            raise DocumentException("The given file is not a PDF")
         else:
             #Number of pages
             # self. page_num = len (self.pdf)
@@ -100,7 +100,6 @@ class PDFDocument(Document):
         Return
         -------------------
         toc_index_o: (int) the indexes of the section in the TOC.
-                     -1 if no match has been found
         """
         logger.info(f"Searching for section with heading '{heading_i}'")
         toc_index_o = -1
@@ -122,6 +121,8 @@ class PDFDocument(Document):
                 toc_index_o = sub_toc_sorted[0][0]
 
             logger.info(f"Section found: '{self.toc[toc_index_o][1]}'")
+        else:
+            raise DocumentException(f"No section with heading '{heading_i}' found")
 
         self.last_toc_index = toc_index_o
         return toc_index_o
@@ -171,6 +172,9 @@ class PDFDocument(Document):
                 'index': end_index,
                 'page': int(self.__get_toc_entry(end_index)[2]) - 1, # TOC has a 1 offset
             }
+        else:
+            raise DocumentException(f"The research of section {section_toc_index_i} has failed")
+            
 
         logger.info(f"Section frame retrieved: {section_frame_o}")
         return section_frame_o
@@ -189,7 +193,7 @@ class PDFDocument(Document):
         Return
         -------------------
         pages_text_o: (str) the text content of the pages frame.
-                      It may be correctly so, an error is signaled returning None
+                      It may be correctly empty.
         """
 
         page_text_o = ""
@@ -214,36 +218,42 @@ class PDFDocument(Document):
 
         while( curr_index <= end_index ):
 
-            curr_item = self.toc[curr_index]
-            curr_page = curr_item[2] - 1 # TOC pages have 1 offset
+            try:
+                curr_item = self.toc[curr_index]
+                curr_page = curr_item[2] - 1 # TOC pages have 1 offset
 
-            # Skip heading on the same page
-            if( prev_page == curr_page ):
-                curr_index += 1 
-                continue
+                # Skip heading on the same page
+                if( prev_page == curr_page ):
+                    curr_index += 1 
+                    continue
 
-            curr_lines = self.__get_page_text ( curr_page )
+                curr_lines = self.__get_page_text ( curr_page )
 
-            # Case: this is the fist page, the text before the heading (included)
-            # shall be removed
-            if(curr_page == start_page):
-                curr_lines = remove_text_lines(curr_lines, sec_title_norm)
+                # Case: this is the fist page, the text before the heading (included)
+                # shall be removed
+                if(curr_page == start_page):
+                    curr_lines = remove_text_lines(curr_lines, sec_title_norm)
 
-            # Case: last page. Remove all the text after the next heading (included)
-            if (curr_page == end_page):
-                curr_lines = remove_text_lines(curr_lines, next_sec_title_norm, True)
+                # Case: last page. Remove all the text after the next heading (included)
+                if (curr_page == end_page):
+                    curr_lines = remove_text_lines(curr_lines, next_sec_title_norm, True)
 
-            # Remove shorter lines (it is supposed they are page numbers
-            # and other stuffs like that)
-            if(fine_trimming_i):
-                curr_lines = remove_short_lines(curr_lines)
+                # Remove shorter lines (it is supposed they are page numbers
+                # and other stuffs like that)
+                if(fine_trimming_i):
+                    curr_lines = remove_short_lines(curr_lines)
 
-            # Add these lines to the result
-            pages_text_list.append( "".join( curr_lines ) )
-
-            # Increment the indexes
-            prev_page = curr_page
-            curr_index += 1
+            except DocumentException as e:
+                logger.error(f"Error extracting text from page {curr_page}: {e}")
+                curr_lines = []
+            except ValueError as e:
+                logger.error(f"Error trimming text from page {curr_page}: {e}")
+            finally:
+                # Add these lines to the result
+                pages_text_list.append( "".join( curr_lines ) )
+                # Increment the indexes
+                prev_page = curr_page
+                curr_index += 1
 
         logger.info(f"Text extraction completed. Retrieved {len(pages_text_list)} parts.")
 
@@ -252,7 +262,7 @@ class PDFDocument(Document):
             self.last_extracted_text = page_text_o
             return page_text_o 
         else:
-            return None
+            raise DocumentException(f"Error: Unable to retrieve text from the section '{section_frame_i}'")
 
     ##################################################
 
@@ -279,32 +289,22 @@ class PDFDocument(Document):
         pages_text_o = ""
         section_heading_o = ""
 
-        sec = self.get_section_by_heading(heading_title_i, first_occurrance_i = False)
-        if(sec == -1):
-            print("Error")
-            # self.logger print_message(f"No section (heading_title_i) found in file {self.pdf_filename)", Logger.LEVEL_ERROR) 
-        else:
+        try:
+            sec = self.get_section_by_heading(heading_title_i, first_occurrance_i = False)
             section_heading_o = self.toc[sec][1]
             sec_frame = self.get_section_pages(sec)
-            if(sec_frame['end'] == None):
-                print("Error")
-                #self.Logger.print_message(f"Error while retrieving pages from section (heading_title_i) from file {self.pdf_filename)", Logger. LEVEL_EF 
-            else:
-                pages_text_o = self.get_section_text(sec_frame, fine_trimming_i = True)
-                if(pages_text_o == None):
-                    print("Error")
-                    #self.logger-print message(f"No text found for section {heading title_i) in file {self.pdf_filename}™, Logger.LEVEL_ERROR)
-                else:
-                    self.last_extracted_text = pages_text_o
-                    message = f"{heading_title_i} found in file {self.file_name} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
-                    # self.logger.print message(message, Logger, LEVEL_ INFO)
-                    print(message)
+            pages_text_o = self.get_section_text(sec_frame, fine_trimming_i = True)
 
-                    # Successfully return
-                    return (section_heading_o, pages_text_o)
-
-        # Error return
-        return None
+        except (DocumentException, ValueError) as e:
+            logger.error(f"Error getting section text by heading: {e}")
+            # Error return
+            return ""
+        else:
+            self.last_extracted_text = pages_text_o
+            message = f"{heading_title_i} found in file {self.file_name} in [{sec_frame['start']['page'] + 1}, {sec_frame['end']['page'] + 1}]"
+            logging.info(message)
+            # Successfully return
+            return (section_heading_o, pages_text_o)
 
     ##################################################
 
@@ -320,7 +320,7 @@ class PDFDocument(Document):
         """
 
         if(not self.last_extracted_text):
-            raise Exception("No extracted text available. Call get_section_text or get_section _text_by_heading first.")
+            raise DocumentException("No extracted text available. Call get_section_text or get_section_text_by_heading first.")
 
         output_dir = os.path.dirname(output_file_path_i)
         if(output_dir != ""):
@@ -383,14 +383,14 @@ class PDFDocument(Document):
 
     def __get_toc_entry(self, toc_index_i):
         if( toc_index_i < 0 or toc_index_i >= len(self.toc)):
-            raise Exception(f"Invalid TOC index {toc_index_i}")
+            raise DocumentException(f"Invalid TOC index {toc_index_i}")
         return self.toc[toc_index_i]
 
     ##################################################
 
     def __get_page_text (self, page_number_i):
         if(page_number_i < 0 or page_number_i >= self.page_num): 
-            raise Exception(f"Invalid page number {page_number_i}")
+            raise ValueError(f"Invalid page number {page_number_i}")
         return self.pdf[page_number_i].get_text("text").splitlines(True) # True -› keep line breaks
 
     ##################################################
@@ -428,9 +428,9 @@ class PDFDocument(Document):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format="[%(name)s :  %(levelname)s] %(message)s")
-    pdf = PDFDocument('/Users/calogeroforte/UPF_Handout.pdf')
-    pdf.get_section_text_by_heading("Introduction")
-    pdf.save_last_extracted_text('/Users/calogeroforte/introduction.txt')
+    pdf = PDFDocument('/Users/calogeroforte/Local_database/UPF_Handout.pdf')
+    pdf.get_section_text_by_heading("Intro")
+    pdf.save_last_extracted_text('/Users/calogeroforte/Local_database/introduction.txt')
     
 
 

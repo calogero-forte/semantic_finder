@@ -112,4 +112,14 @@ class Document(ABC):
         (str) the extension of this file without the dot
         """
         return file_path_i.lower().split('.')[-1]
+
+####################################################################################################
+
+class DocumentException(Exception):
+    """
+    Custom exception for Document errors.
+    """
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
     
