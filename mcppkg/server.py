@@ -96,19 +96,36 @@ class McpServer:
             self.mcp.add_resource(resource_i)
 
     def register_routes(self, route_i: Callable, uri_i: str, http_method_i: str | list[str]):
-
-        self.mcp.custom_route(uri_i, methods=http_method_i)(route_i)
-
-    # def register_resources(self, resources_dict: dict):
-    #     """
-    #     Register multiple resources from a dictionary.
-
-    #     resources_dict: (dict) Dictionary mapping URI (str) to the resource function (Callable)
-    #     """
-    #     for uri, resource_func in resources_dict.items():
-    #         self.mcp.resource(uri)(resource_func)
+        if( isinstance( http_method_i, list) ):
+            self.mcp.custom_route(uri_i, methods=http_method_i)(route_i)
+        else:
+            self.mcp.custom_route(uri_i, methods=[http_method_i])(route_i)
 
 
     def __call__(self):
-        pass
+
+        from dotenv import load_dotenv
+        from mcppkg.routes import health
+        from mcppkg.tools import get_current_time, get_pdf_text, get_pdf_toc
+        from mcppkg.resources import get_all_documents, get_documents_by_name, get_documents_by_extension
+        import uvicorn
+
+        # Load environment variables before setting up MCP
+        load_dotenv()
+
+        # Register health route
+        self.register_routes(health, "/health", "GET")
+        # Register the tools
+        self.register_tools( [get_current_time, get_pdf_text, get_pdf_toc] )
+        # Register the resources
+        self.register_resources( [get_all_documents, get_documents_by_name, get_documents_by_extension] )
+
+        # Configure basic logging for the script execution 
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+        port = int(os.getenv("MCP_PORT", "8001"))
+        logger.info(f"Starting basic MCP server on port {port}")
+        mcp_app = self.build_app()
+        uvicorn.run(mcp_app, host="127.0.0.1", port=port)
         
