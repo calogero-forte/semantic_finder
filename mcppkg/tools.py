@@ -1,7 +1,6 @@
 from fastmcp.tools import tool
 from fastmcp.exceptions import ToolError
 from fastmcp import Context
-
 import datetime
 import os
 import logging
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 )
 async def get_current_time() -> str:
     """
-    Get the current date and time.
     
     Return
     -------------------
@@ -48,17 +46,15 @@ async def get_pdf_toc(pdf_name_i: str, ctx_i: Context) -> str:
     doc_handler = ctx_i.request_context.lifespan_context.get("doc_handler")
     # Add a timer or some flag
     doc_handler.sync_documents(os.getenv("LOCAL_PATHS"))
-    toc = None
-    for pdf in doc_handler.filter_documents(name_i = pdf_name_i):
-        toc = pdf.get_toc()
 
-    if(toc != None):
-        logger.info(f"Successfully retrieved TOC from {pdf.file_name}")
-        return PDFDocument.formtat_toc(toc)
-    else:
-        logger.error(f"No results found for TOC in document '{pdf_name_i}'")
+    try:
+        # TODO: adjust this for which is useless for the moment
+        for pdf in doc_handler.filter_documents(name_i = pdf_name_i): 
+            logger.info(f"Successfully retrieved TOC from {pdf.file_name}")
+            return pdf.toc
+    except DocumentException as e:
+        logger.error(f"Error getting TOC: {e} in pdf {pdf.file_name}")
         raise ToolError("The research didn't yeld any result")
-
 
 ##################################################
 

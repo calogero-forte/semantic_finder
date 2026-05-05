@@ -42,7 +42,7 @@ class PDFDocument(Document):
             #Number of pages
             # self. page_num = len (self.pdf)
             # Table of contents in format [level, title, page]
-            self.toc = self.pdf.get_toc(simple = True)
+            self.__toc = self.pdf.get_toc(simple = True)
             #Store the TOC index of the last found section
             self.last_toc_index = -1
             #Contain the last extracted text
@@ -75,14 +75,17 @@ class PDFDocument(Document):
 
     # Other public methods
 
-    def get_toc(self) -> list:
+    @property
+    def toc(self) -> list:
         """
 
         Return
         -------------------
         (list) The table of content of this pdf
         """
-        return self.toc
+        if(self.__toc == None or len(self.__toc) == 0):
+            raise DocumentException("The table of contents is empty.")
+        return self.__toc
 
     ##################################################
 
@@ -428,9 +431,9 @@ class PDFDocument(Document):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format="[%(name)s :  %(levelname)s] %(message)s")
-    pdf = PDFDocument('/Users/calogeroforte/Local_database/UPF_Handout.pdf')
+    pdf = PDFDocument('/Users/calogeroforte/Local_database/Lezioni_di_Teoria_dei_Segnali.pdf')
     pdf.get_section_text_by_heading("Intro")
-    pdf.save_last_extracted_text('/Users/calogeroforte/Local_database/introduction.txt')
+    # pdf.save_last_extracted_text('/Users/calogeroforte/Local_database/introduction.txt')
     
 
 
