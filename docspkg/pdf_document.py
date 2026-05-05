@@ -55,7 +55,7 @@ class PDFDocument(Document):
     # Redefining parent methods
 
     @property
-    def page_num(self):
+    def page_num(self) -> int:
         """
 
         Return
@@ -68,14 +68,14 @@ class PDFDocument(Document):
     ##################################################
 
     @page_num.setter
-    def page_num(self, value):
+    def page_num(self, value_i: int) -> None:
         raise Exception("The page number cannot be modified")
 
     ##################################################
 
     # Other public methods
 
-    def get_toc(self):
+    def get_toc(self) -> list:
         """
 
         Return
@@ -86,7 +86,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def get_section_by_heading(self, heading_i, first_occurrance_i = True):
+    def get_section_by_heading(self, heading_i: str, first_occurrance_i: bool = True) -> int:
         """
         Search for the section with heading i in its title
         
@@ -129,7 +129,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def get_section_pages(self, section_toc_index_i):
+    def get_section_pages(self, section_toc_index_i: int) -> dict:
         """
         Return all the pages that belong to the given section 
         i.e. which heading level is < to the one of the given section.
@@ -181,7 +181,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def get_section_text(self, section_frame_i, fine_trimming_i = False):
+    def get_section_text(self, section_frame_i: dict, fine_trimming_i: bool = False) -> str:
         """
         Get the text content of a pages frame
 
@@ -266,7 +266,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def get_section_text_by_heading(self, heading_title_i):
+    def get_section_text_by_heading(self, heading_title_i: str) -> tuple[str, str] | str:
         """
         This method embeds the functionalities of
         - get_section_by_heading
@@ -308,7 +308,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def save_last_extracted_text(self, output_file_path_i):
+    def save_last_extracted_text(self, output_file_path_i: str) -> str:
         """
         Save the last extracted text to a txt file.
 
@@ -335,7 +335,7 @@ class PDFDocument(Document):
     ##################################################
 
     @staticmethod
-    def formtat_toc(toc_i):
+    def formtat_toc(toc_i: list) -> str:
         """
         Format the table of contents to be displayed in a user-friendly way.
 
@@ -353,7 +353,7 @@ class PDFDocument(Document):
     ##################################################
 
     @staticmethod
-    def get_all_pdf_documents(dir_path_i):
+    def get_all_pdf_documents(dir_path_i: str) -> list['PDFDocument']:
         """
         Search for all PDF documents in a given directory,
         instantiate a PDFDocument for each, and return them.
@@ -381,21 +381,21 @@ class PDFDocument(Document):
     # Private methods
     ##########################################################
 
-    def __get_toc_entry(self, toc_index_i):
+    def __get_toc_entry(self, toc_index_i: int) -> list:
         if( toc_index_i < 0 or toc_index_i >= len(self.toc)):
             raise DocumentException(f"Invalid TOC index {toc_index_i}")
         return self.toc[toc_index_i]
 
     ##################################################
 
-    def __get_page_text (self, page_number_i):
+    def __get_page_text(self, page_number_i: int) -> list[str]:
         if(page_number_i < 0 or page_number_i >= self.page_num): 
             raise ValueError(f"Invalid page number {page_number_i}")
         return self.pdf[page_number_i].get_text("text").splitlines(True) # True -› keep line breaks
 
     ##################################################
 
-    def __get_toc_entries_by_title(self, heading_i):
+    def __get_toc_entries_by_title(self, heading_i: str) -> list[int]:
 
         correspondences = []
         heading_norm = normalize_string(heading_i)
@@ -407,7 +407,7 @@ class PDFDocument(Document):
 
     ##################################################
 
-    def __sort_toc_entries_by_heading(self, toc_entries_i, searched_heading_i):
+    def __sort_toc_entries_by_heading(self, toc_entries_i: list, searched_heading_i: str) -> list:
 
         searched_heading_norm = normalize_string(searched_heading_i)
 

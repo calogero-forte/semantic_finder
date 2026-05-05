@@ -33,7 +33,7 @@ class Document(ABC):
 
     @property
     @abstractmethod
-    def page_num(self):
+    def page_num(self) -> int:
         """
         Get the current page number.
 
@@ -47,11 +47,15 @@ class Document(ABC):
 
     @page_num.setter
     @abstractmethod
-    def page_num(self, value):
+    def page_num(self, value_i: int) -> None:
         """
         Set the current page number.
 
-        value: (int) The page number to set
+        value_i: (int) The page number to set
+
+        Return
+        -------------------
+        None
         """
         pass
 
@@ -84,12 +88,12 @@ class Document(ABC):
     ##################################################
 
     @staticmethod
-    def extract_filename(path_i):
+    def extract_filename(path_i: str) -> str:
         """
         Extract the filename from a given Document path.
 
-        pdf_path_i: (str) The path (absolute or relative) 
-                    of the file
+        path_i: (str) The path (absolute or relative) 
+                of the file
 
         Return
         -------------------
@@ -100,7 +104,7 @@ class Document(ABC):
     ##################################################
 
     @staticmethod
-    def get_file_extension(file_path_i) -> str:
+    def get_file_extension(file_path_i: str) -> str:
         """
         Retrieve the extension from a file name/path
 

@@ -41,11 +41,15 @@ class DocumentHandler:
 
     ##################################################
 
-    def add_document(self, document_i: Document):
+    def add_document(self, document_i: Document) -> None:
         """
         Add a document to the list.
 
         document_i: (Document) The document to add
+
+        Return
+        -------------------
+        None
         """
         if isinstance(document_i, Document):
             self.__documents.append(document_i)
@@ -54,7 +58,7 @@ class DocumentHandler:
 
     ##################################################
 
-    def clear_documents(self):
+    def clear_documents(self) -> None:
         """
         Clear the list of managed documents.
 
@@ -66,7 +70,7 @@ class DocumentHandler:
 
     ##################################################
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[Document, None, None]:
         """
         Return an iterator over the documents.
 
@@ -117,7 +121,7 @@ class DocumentHandler:
 
     ##################################################
 
-    def sync_documents(self, directory_path_i):
+    def sync_documents(self, directory_path_i: str) -> None:
         """
         Synchronizes this DocumentHandler with the files
         currently inside directory_path_i
@@ -153,7 +157,7 @@ class DocumentHandler:
     ##################################################
 
     @staticmethod
-    def get_directory_documents(dir_path_i):
+    def get_directory_documents(dir_path_i: str) -> list[str]:
         """
         Search for all documents in a given directory.
 

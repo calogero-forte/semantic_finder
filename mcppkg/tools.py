@@ -15,12 +15,16 @@ logger = logging.getLogger(__name__)
     description="Get the current date and time.",
 )
 async def get_current_time() -> str:
-    """Get the current date and time.
+    """
+    Get the current date and time.
     
-    Returns:
-        A string representing the current date and time in ISO 8601 format.
+    Return
+    -------------------
+    (str) A string representing the current date and time in ISO 8601 format.
     """
     return datetime.datetime.now().isoformat()
+
+##################################################
 
 @tool(
     name="get_pdfs_toc",
@@ -28,10 +32,20 @@ async def get_current_time() -> str:
     In this way the client can understand what topics this PDF covers""",
     annotations={"readOnlyHint": True}
 )
-async def get_pdf_toc(pdf_name_i: str, ctx: Context) -> str:
+async def get_pdf_toc(pdf_name_i: str, ctx_i: Context) -> str:
+    """
+    Retrieve the table of contents of the PDF given by name.
+
+    pdf_name_i: (str) The name of the PDF file
+    ctx_i: (Context) The FastMCP context
+
+    Return
+    -------------------
+    (str) The formatted table of contents
+    """
     logger.info(f"Retrieving TOC from PDF '{pdf_name_i}'")
     # Get the docs_handler
-    doc_handler = ctx.request_context.lifespan_context.get("doc_handler")
+    doc_handler = ctx_i.request_context.lifespan_context.get("doc_handler")
     # Add a timer or some flag
     doc_handler.sync_documents(os.getenv("LOCAL_PATHS"))
     toc = None
@@ -46,20 +60,33 @@ async def get_pdf_toc(pdf_name_i: str, ctx: Context) -> str:
         raise ToolError("The research didn't yeld any result")
 
 
+##################################################
+
 @tool(
     name="get_pdfs_texts",
     description="""Retrieve the text that match the searched section in each pdf documents.
     In this way a client can answer a question with the information contained in the PDF documents""",
     annotations={"readOnlyHint": True}
 )
-async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx: Context) -> dict:
+async def get_pdf_text(pdf_name_i: str, section_title_i: str, ctx_i: Context) -> str:
+    """
+    Retrieve the text that match the searched section in each pdf documents.
+
+    pdf_name_i: (str) The name of the PDF file
+    section_title_i: (str) The section title to search for
+    ctx_i: (Context) The FastMCP context
+
+    Return
+    -------------------
+    (str) The extracted text content
+    """
 
     logger.info(f"Retrieving text from PDF '{pdf_name_i}' for section '{section_title_i}'")
 
     res = []
 
     # Get the docs_handler
-    doc_handler = ctx.request_context.lifespan_context.get("doc_handler")
+    doc_handler = ctx_i.request_context.lifespan_context.get("doc_handler")
     # Add a timer or some flag
     doc_handler.sync_documents(os.getenv("LOCAL_PATHS"))
     

@@ -16,9 +16,11 @@ from contextlib import asynccontextmanager
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
-async def mcp_lifespan(server: FastMCP) -> dict:
+async def mcp_lifespan(server_i: FastMCP) -> dict:
     """
     Lifespan manager for the MCP server.
+
+    server_i: (FastMCP) The FastMCP server instance
 
     Return
     -------------------
@@ -33,7 +35,17 @@ class McpServer:
     register tools and resources.
     """
 
-    def __init__(self, name_i="mcp_server", enable_auth_i=True):        
+    def __init__(self, name_i: str = "mcp_server", enable_auth_i: bool = True) -> None:
+        """
+        Initialize the McpServer.
+
+        name_i: (str) Name of the MCP server
+        enable_auth_i: (bool) Whether to enable authentication
+
+        Return
+        -------------------
+        None
+        """
 
         # Authenticator instantiation
         if( enable_auth_i ):
@@ -54,6 +66,8 @@ class McpServer:
         if(self.mcp_authenticator != None):
             self.mcp_authenticator.register_routes(self.mcp)
 
+
+    ##################################################
 
     def build_app(self) -> Any:
         """
@@ -76,10 +90,30 @@ class McpServer:
             app = _RegistrationCompatMiddleware(app)
         return app
 
+    ##################################################
+
     def get_mcp(self) -> FastMCP:
+        """
+        Get the FastMCP instance.
+
+        Return
+        -------------------
+        (FastMCP) The FastMCP instance
+        """
         return self.mcp
 
+    ##################################################
+
     def register_tools(self, tool_i: Tool | list[Tool]):
+        """
+        Register one or multiple tools to the server.
+
+        tool_i: (Tool | list[Tool]) Tool or list of tools to register
+
+        Return
+        -------------------
+        None
+        """
 
         if( isinstance(tool_i, list) ):
             for tool in tool_i:
@@ -87,7 +121,18 @@ class McpServer:
         else:
             self.mcp.add_tool(tool_i)
 
+    ##################################################
+
     def register_resources(self, resource_i: Resource | list[Resource]):
+        """
+        Register one or multiple resources to the server.
+
+        resource_i: (Resource | list[Resource]) Resource or list of resources to register
+
+        Return
+        -------------------
+        None
+        """
 
         if( isinstance(resource_i, list) ):
             for res in resource_i:
@@ -95,14 +140,36 @@ class McpServer:
         else:
             self.mcp.add_resource(resource_i)
 
+    ##################################################
+
     def register_routes(self, route_i: Callable, uri_i: str, http_method_i: str | list[str]):
+        """
+        Register a custom HTTP route.
+
+        route_i: (Callable) The route handler function
+        uri_i: (str) The URI for the route
+        http_method_i: (str | list[str]) HTTP methods allowed
+
+        Return
+        -------------------
+        None
+        """
         if( isinstance( http_method_i, list) ):
             self.mcp.custom_route(uri_i, methods=http_method_i)(route_i)
         else:
             self.mcp.custom_route(uri_i, methods=[http_method_i])(route_i)
 
 
+    ##################################################
+
     def __call__(self):
+        """
+        Start the MCP server.
+
+        Return
+        -------------------
+        None
+        """
 
         from dotenv import load_dotenv
         from mcppkg.routes import health
