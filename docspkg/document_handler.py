@@ -70,6 +70,23 @@ class DocumentHandler:
 
     ##################################################
 
+    def remove_document(self, document_i: Document) -> None:
+        """
+        Remove a document from the list of documents.
+
+        document_i: (Document) The document to remove
+
+        Return
+        -------------------
+        None
+        """
+        try:
+            self.__documents.remove(document_i)
+        except ValueError as e:
+            logger.error(f"Document {document_i.file_name} not in the list")
+
+    ##################################################
+
     def __iter__(self) -> Generator[Document, None, None]:
         """
         Return an iterator over the documents.
@@ -140,9 +157,26 @@ class DocumentHandler:
         current_files = DocumentHandler.get_directory_documents(local_paths)
         
         # Here it would be good to have a timer 
-        self.clear_documents()
+        
+        # Extract names of files currently in the directory
+        current_file_names = {os.path.basename(f) for f in current_files}
+        
+        # Remove documents that are in the list but no longer in the directory
+        docs_to_remove = [doc for doc in self.__documents if doc.file_name not in current_file_names]
+        for doc in docs_to_remove:
+            self.remove_document(doc)
+            
+        # Get names of documents currently in the list
+        existing_doc_names = {doc.file_name for doc in self.__documents}
         
         for file_path in current_files:
+            file_name = os.path.basename(file_path)
+            
+            # If it is still present in the list do nothing
+            if file_name in existing_doc_names:
+                continue
+                
+            # If it is not present in the list, add it
             ext = Document.get_file_extension( file_path )
             try:
                 if ext == 'pdf':
@@ -179,20 +213,73 @@ class DocumentHandler:
 
 ####################################################################################################
 
+def test_sync_documents():
+    import random
+    import shutil
+
+    test_dir = '/Users/calogeroforte/Local_database'
+    tmp_dir = os.path.join(test_dir, 'tmp')
+
+    print("--- Starting sync_documents test ---")
+
+    # Ensure tmp directory exists
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    # 1. Populate the DocumentHandler with current content
+    dh = DocumentHandler()
+    dh.sync_documents(test_dir)
+    print(f"[Initial Sync] Number of documents: {len(dh)}")
+    for d in dh:
+        print(f"  - {d.file_name}")
+
+    if len(dh) == 0:
+        print("No documents to test with!")
+        return
+
+    # 2. Move randomly a file to the subdirectory "tmp"
+    docs_list = dh.get_all_documents()
+    doc_to_move = random.choice(docs_list)
+    old_path = os.path.join(test_dir, doc_to_move.file_name)
+    new_path = os.path.join(tmp_dir, doc_to_move.file_name)
+    
+    print(f"\n[Move] Moving '{doc_to_move.file_name}' to tmp/")
+    shutil.move(old_path, new_path)
+
+    # 3. re-sync the content
+    dh.sync_documents(test_dir)
+    print(f"\n[Second Sync] Number of documents: {len(dh)}")
+    for d in dh:
+        print(f"  - {d.file_name}")
+
+    # 4. Replace the moved file at its old place
+    print(f"\n[Restore] Moving '{doc_to_move.file_name}' back to {test_dir}/")
+    shutil.move(new_path, old_path)
+
+    # 5. re-sync the content
+    dh.sync_documents(test_dir)
+    print(f"\n[Final Sync] Number of documents: {len(dh)}")
+    for d in dh:
+        print(f"  - {d.file_name}")
+
+    print("--- End of test ---")
+
 if __name__ == '__main__':
 
-    from pdf_document import PDFDocument
+    # from pdf_document import PDFDocument
 
-    docs = [PDFDocument( '/Users/calogeroforte/Local_database/Lezioni di Teoria dei Segnali.pdf' ), PDFDocument( '/Users/calogeroforte/Local_database/VHDL - Programming by Example.pdf' )]
-    dh = DocumentHandler(docs)
+    # docs = [PDFDocument( '/Users/calogeroforte/Local_database/Lezioni di Teoria dei Segnali.pdf' ), PDFDocument( '/Users/calogeroforte/Local_database/VHDL - Programming by Example.pdf' )]
+    # dh = DocumentHandler(docs)
     
-    print(dh.get_all_documents())
+    # print(dh.get_all_documents())
 
-    for d in dh:
-        print(d.file_name)
+    # for d in dh:
+    #     print(d.file_name)
 
-    for d in dh.filter_documents(name_i = 'VHDL'):
-        print(d.file_name)
+    # for d in dh.filter_documents(name_i = 'VHDL'):
+    #     print(d.file_name)
 
-    for d in dh.filter_documents(extension_i = '.pdf'):
-        print(d.file_name)
+    # for d in dh.filter_documents(extension_i = '.pdf'):
+    #     print(d.file_name)
+
+    print("\n\n==== Running test_sync_documents ====")
+    test_sync_documents()
