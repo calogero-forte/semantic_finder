@@ -5,8 +5,8 @@ import logging
 import docx
 from docx.opc.constants import RELATIONSHIP_TYPE
 import xml.etree.ElementTree as ET
-from document import Document, DocumentException
-from utils import *
+from .document import Document, DocumentException
+from .utils import *
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +84,12 @@ class WordDocument(Document):
     def get_page_text(self, page_number_i: int) -> str:
         """
         Get the text content of a specific page.
+
+        page_number_i: (int) The page number (0-indexed)
+
+        Return
+        -------------------
+        (str) The text content of the page
         """
         if page_number_i < 0 or page_number_i >= self.page_num:
             raise DocumentException(f"Invalid page number {page_number_i}. Valid range is 0 to {self.page_num - 1}.")
@@ -170,7 +176,7 @@ class WordDocument(Document):
     def get_section_by_heading(self, heading_i: str, first_occurrance_i: bool = True) -> int:
         logger.info(f"Searching for section with heading '{heading_i}'")
         
-        indexes = self.__get_section_by_heading(heading_i)
+        indexes = self.__get_sections_indexes_by_heading(heading_i)
 
         if first_occurrance_i:
             toc_index_o = indexes[0]
@@ -222,6 +228,15 @@ class WordDocument(Document):
     ##################################################
 
     def get_section_text_by_heading(self, heading_title_i: str) -> tuple[str, str] | str:
+        """
+        Get the text content of a section identified by its heading title.
+
+        heading_title_i: (str) The heading title of the section
+
+        Return
+        -------------------
+        (tuple[str, str] | str) The text content of the section
+        """
         logger.info(f"Getting section text by heading: '{heading_title_i}'")
         pages_text_o = ""
         section_heading_o = ""
@@ -242,6 +257,15 @@ class WordDocument(Document):
     ##################################################
 
     def save_last_extracted_text(self, output_file_path_i: str) -> str:
+        """
+        Save the last extracted text to a file.
+
+        output_file_path_i: (str) The path to the output file
+
+        Return
+        -------------------
+        (str) The path to the output file
+        """
         if not self.last_extracted_text:
             raise DocumentException("No extracted text available.")
 
@@ -274,7 +298,7 @@ class WordDocument(Document):
 
         return sorted(toc_entries_i, key=sort_func)
 
-    def __get_section_by_heading(self, heading_i: str) -> list[int]:
+    def __get_sections_indexes_by_heading(self, heading_i: str) -> list[int]:
         heading_norm = normalize_string(heading_i)
 
         found_indices = []
@@ -312,7 +336,9 @@ class WordDocument(Document):
         tokens_per_page = math.ceil(total_tokens / self.page_num) if self.page_num > 0 else 1
         if tokens_per_page == 0:
             tokens_per_page = 1
-            
+        
+        # TODO This pages division doesn't make sense
+
         for i in range(0, len(all_text), tokens_per_page):
             self.__pages.append("".join(all_text[i:i+tokens_per_page]))
             

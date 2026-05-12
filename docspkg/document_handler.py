@@ -3,6 +3,8 @@ import logging
 from typing import Generator
 from .document import Document
 from .pdf_document import PDFDocument
+from .txt_document import TxtDocument
+from .word_document import WordDocument
 
 logger = logging.getLogger(__name__)
 
@@ -182,8 +184,14 @@ class DocumentHandler:
                 if ext == 'pdf':
                     doc = PDFDocument(file_path)
                     self.add_document(doc)
+                elif ext == 'txt':
+                    doc = TxtDocument(file_path)
+                    self.add_document(doc)
+                elif ext == 'docx':
+                    doc = WordDocument(file_path)
+                    self.add_document(doc)
                 else:
-                    # Add future document handlers here (e.g., txt, docx) using polymorphism
+                    # Add future document handlers here using polymorphism
                     logger.debug(f"Document type '{ext}' is not currently supported: {file_path}")
             except Exception as e:
                 logger.error(f"Failed to load document {file_path}: {e}")

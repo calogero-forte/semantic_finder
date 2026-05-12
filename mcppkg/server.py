@@ -173,7 +173,7 @@ class McpServer:
 
         from dotenv import load_dotenv
         from mcppkg.routes import health
-        from mcppkg.tools import get_current_time, get_pdf_text, get_pdf_toc
+        from mcppkg.tools import get_current_time, get_pdf_text, get_pdf_toc, analyze_txt_document, get_word_toc, get_word_text
         from mcppkg.resources import get_all_documents, get_documents_by_name, get_documents_by_extension
         import uvicorn
 
@@ -183,7 +183,7 @@ class McpServer:
         # Register health route
         self.register_routes(health, "/health", "GET")
         # Register the tools
-        self.register_tools( [get_current_time, get_pdf_text, get_pdf_toc] )
+        self.register_tools( [get_current_time, get_pdf_text, get_pdf_toc, analyze_txt_document, get_word_toc, get_word_text] )
         # Register the resources
         self.register_resources( [get_all_documents, get_documents_by_name, get_documents_by_extension] )
 
