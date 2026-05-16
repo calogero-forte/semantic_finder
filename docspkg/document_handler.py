@@ -113,27 +113,36 @@ class DocumentHandler:
 
     ##################################################
 
-    def filter_documents(self, name_i: str | None = None, extension_i: str | None = None) -> Generator[Document, None, None]:
+    def filter_documents(self, name_i: str | list[str] | None = None, extension_i: str | list[str] | None = None) -> Generator[Document, None, None]:
         """
         A generator that yields documents filtered by name and/or extension.
 
-        name_i: (str | None) A substring to match in the filename
-        extension_i: (str | None) The extension to match (e.g. '.pdf', 'docx')
+        name_i: (str | list[str] | None) A substring or list of substrings to match in the filename
+        extension_i: (str | list[str] | None) The extension or list of extensions to match (e.g. '.pdf', 'docx')
 
         Return
         -------------------
         (Generator) yields Document objects matching the criteria
         """
 
-        # Clean the passed extension for compatibility with the
-        # one stored in Document 
-        if extension_i is not None and extension_i.startswith('.'):
-            extension_i = extension_i.lstrip('.')
+        names = []
+        if name_i is not None:
+            names = [name_i] if isinstance(name_i, str) else name_i
+
+        extensions = []
+        if extension_i is not None:
+            exts = [extension_i] if isinstance(extension_i, str) else extension_i
+            extensions = [ext.lstrip('.') if ext.startswith('.') else ext for ext in exts]
 
         for doc in self.__documents:
             
-            match_name = ( name_i is not None ) and ( name_i in doc.file_name )
-            match_ext = ( extension_i is not None ) and ( extension_i == doc.file_extenstion)
+            match_name = False
+            if names:
+                match_name = any(n in doc.file_name for n in names)
+                
+            match_ext = False
+            if extensions:
+                match_ext = doc.file_extenstion in extensions
             
             if match_name or match_ext:
                 yield doc

@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from .utils import normalize_string
+from .document import DocumentException
 
 logger = logging.getLogger(__name__)
 
