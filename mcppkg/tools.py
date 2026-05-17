@@ -1,3 +1,22 @@
+"""
+License Statement & Module Information
+======================================
+
+This code is provided as open-source software and has been developed as part of the 
+Master in Applied Artificial Intelligence postgraduate course, for the Python Programming topic.
+
+The purpose of this application is to serve as a Model Context Protocol (MCP) server, 
+providing a Large Language Model (LLM) the capability to access and retrieve 
+information from local documents to answer related queries.
+
+- Program Name: Semantic Finder
+- Module Name: tools.py
+- Revision: 1.0
+- Author: Calogero Forte
+- Affiliation: University of Palermo
+- Development Date: May 2026
+"""
+
 from fastmcp.tools import tool
 from fastmcp.exceptions import ToolError
 from fastmcp import Context
@@ -102,17 +121,21 @@ async def get_documents_text(documents_name_i: list[str], search_keyword_i: str,
     for doc in doc_handler.filter_documents(name_i = documents_name_i, extension_i = ["pdf", "docx"]):
         try:
             logger.info(f"Extracting text related to '{search_keyword_i}' from {doc.file_name}")
-            res.append( doc.get_section_text_by_heading(search_keyword_i)[1] )
+            section_res = doc.get_section_text_by_heading(search_keyword_i)
+            if isinstance(section_res, tuple):
+                res.append( section_res[1] )
+            else:
+                logger.warning(f"Keyword '{search_keyword_i}' not found in {doc.file_name}")
         except DocumentException as e:
-            logger.error(f"Error getting section text by heading: {e} in pdf {pdf.file_name}")
+            logger.error(f"Error getting section text by heading: {e} in doc {doc.file_name}")
             continue
 
     if(len(res) > 0):
-        logger.info(f"Successfully extracted section '{section_title_i}' from documents")
+        logger.info(f"Successfully extracted text for keyword '{search_keyword_i}' from documents")
         return "\n".join(res)
     else:
-        logger.error(f"No results found for section '{section_title_i}' in document '{pdf_name_i}'")
-        return f"No results found for keyword '{search_keyword_i}' in document '{documents_name_i}'"
+        logger.error(f"No results found for keyword '{search_keyword_i}' in documents '{documents_name_i}'")
+        return f"No results found for keyword '{search_keyword_i}' in documents '{documents_name_i}'"
 
 ##################################################
 

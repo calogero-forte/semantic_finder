@@ -1,5 +1,31 @@
-"""Authentication module for FastMCP Server."""
 from __future__ import annotations
+"""
+License Statement & Module Information
+======================================
+
+This code is provided as open-source software and has been developed as part of the 
+Master in Applied Artificial Intelligence postgraduate course, for the Python Programming topic.
+
+The purpose of this application is to serve as a Model Context Protocol (MCP) server, 
+providing a Large Language Model (LLM) the capability to access and retrieve 
+information from local documents to answer related queries.
+
+- Program Name: Semantic Finder
+- Module Name: authentication.py
+- Revision: 1.0
+- Author: Calogero Forte
+- Affiliation: University of Palermo
+- Development Date: May 2026
+"""
+"""
+Courtesy Statement
+==================
+
+The code used in this module is courtesy of 
+Ing. Andrea Citrolo - The Software Academy - andrea.citrolo@thesoftwareacademy.it
+Reference project:
+https://github.com/The-Software-Academy/mcp-example/tree/main
+"""
 
 import json
 import logging
@@ -10,7 +36,6 @@ import urllib.parse
 from pathlib import Path
 from string import Template
 from typing import Any
-
 from fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response

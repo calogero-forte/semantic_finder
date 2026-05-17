@@ -1,3 +1,22 @@
+"""
+License Statement & Module Information
+======================================
+
+This code is provided as open-source software and has been developed as part of the 
+Master in Applied Artificial Intelligence postgraduate course, for the Python Programming topic.
+
+The purpose of this application is to serve as a Model Context Protocol (MCP) server, 
+providing a Large Language Model (LLM) the capability to access and retrieve 
+information from local documents to answer related queries.
+
+- Program Name: Semantic Finder
+- Module Name: word_document.py
+- Revision: 1.0
+- Author: Calogero Forte
+- Affiliation: University of Palermo
+- Development Date: May 2026
+"""
+
 from docx.opc.constants import RELATIONSHIP_TYPE
 import xml.etree.ElementTree as ET
 from .document import Document, DocumentException
@@ -139,7 +158,7 @@ class WordDocument(Document, TocDocument):
                     if fine_trimming_i:
                         curr_lines = remove_short_lines(curr_lines)
 
-            except ValueError as e:
+            except (ValueError, IndexError) as e:
                 logger.error(f"Error trimming text from frame [{start_page}, {end_page}]: {e}")
                 curr_lines = []
             except Exception as e:

@@ -62,6 +62,24 @@ classDiagram
     TocDocument <|-- WordDocument
     
     DocumentHandler o-- Document : manages
+
+    class McpServer {
+        +mcp_authenticator : MCPAuthenticator
+        +mcp : FastMCP
+        +build_app() Any
+        +get_mcp() FastMCP
+        +register_tools(tool_i)
+        +register_resources(resource_i)
+        +register_routes(route_i, uri_i, http_method_i)
+    }
+
+    class MCPAuthenticator {
+        +provider : Any
+        +register_routes(mcp)
+    }
+
+    McpServer o-- MCPAuthenticator : uses
+    McpServer ..> DocumentHandler : injects
 ```
 
 ### Implementation Details
@@ -124,3 +142,26 @@ To add support for a new document format:
 1. Create a new class in `docspkg` that inherits from `Document` (and `TocDocument` if applicable).
 2. Implement the required abstract methods (e.g., `page_num`, text extraction).
 3. Update the `sync_documents` method in `DocumentHandler` to instantiate your new class when it encounters the corresponding file extension.
+
+### Example Interaction
+
+Here is an example of how an AI agent uses the exposed MCP tools to answer user queries:
+
+**User**: Which word (docx) documents do I have in my local database?
+
+**AI**: Based on the information retrieved from your local database via the MCP server, you have the following Word (`.docx`) documents available:
+- `Dante.docx`
+- `Leopardi.docx`
+
+**User**: What are the topics of Dante.docx?
+
+**AI**: Based on the Table of Contents I retrieved earlier, the topics (sections) in **Dante.docx** are structured as follows:
+- **Divina commedia**
+  - Canto I to Canto X
+- **EOF** (End of File)
+
+**User**: Can you talk me about Canto I from Dante.docx?
+
+**AI**: Based on the content extracted from **Dante.docx**, here is the summary of **Canto I**:
+Dante finds himself lost in a "selva oscura" (dark forest), which is a symbol of sin and his own spiritual crisis. He tries in vain to climb a sunlit hill, but his path is blocked by "tre fiere" (three wild beasts) that represent moral and political obstacles.
+Just when it seems there is no way out for him, the ancient Roman poet Virgilio (Virgil) appears. Virgilio offers to guide Dante on a journey through Hell (Inferno) and Purgatory (Purgatorio) so that he can ultimately reach salvation.
