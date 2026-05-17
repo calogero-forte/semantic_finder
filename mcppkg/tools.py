@@ -125,7 +125,7 @@ async def get_documents_text(documents_name_i: list[str], search_keyword_i: str,
             if isinstance(section_res, tuple):
                 res.append( section_res[1] )
             else:
-                logger.warning(f"Keyword '{search_keyword_i}' not found in {doc.file_name}")
+                logger.info(f"Keyword '{search_keyword_i}' not found in {doc.file_name}")
         except DocumentException as e:
             logger.error(f"Error getting section text by heading: {e} in doc {doc.file_name}")
             continue
