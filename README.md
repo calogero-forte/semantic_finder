@@ -37,7 +37,7 @@ It is recomanded to rename the `.env_example` file to `.env` and fill in the val
 To run the MCP server, ensure you have your environment variables set up (particularly `LOCAL_PATHS` which points to the directory containing your documents, and `MCP_PORT`), and execute the main entry point:
 
 ```bash
-python main.py
+uv run main.py
 ```
 
 This will start the FastMCP server on `127.0.0.1` at the configured port (default is `8001`), ready to accept connections from an MCP client. The server will automatically sync and index all supported documents (`.pdf`, `.docx`, `.txt`) found in the `LOCAL_PATHS` directory.
